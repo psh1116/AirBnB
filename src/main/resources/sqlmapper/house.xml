@@ -188,9 +188,9 @@
                 FROM RESERVATION
                 WHERE HOUSE.house_id = RESERVATION.house_id
                 AND (reservation_status = 'BEFORE_STAY' OR reservation_status = 'STAY' OR reservation_status = 'WAIT')
-                AND ((reservation.check_out BETWEEN #{checkIn} AND #{checkOut})
-                OR (reservation.check_in BETWEEN #{checkIn} AND #{checkOut})
-                OR (reservation.check_in &lt; #{checkIn} AND #{checkOut} &lt; reservation.check_out))), 0)
+                AND ((#{checkOut} > reservation.check_out and reservation.check_out >= #{checkIn})
+                OR (#{checkOut} >= reservation.check_in and reservation.check_in > #{checkIn})
+                OR (#{checkIn} > reservation.check_in  AND reservation.check_out > #{checkOut}))), 0)
             </if>
             <if test="amenities != null and !amenities.isEmpty()">
                 AND HOUSE.house_id IN (
@@ -202,7 +202,7 @@
                 </foreach>
                 GROUP BY house_id
                 HAVING COUNT(DISTINCT amenities) = (
-                SELECT COUNT(*)
+                SELECT COUNT(*)z2z
                 FROM (
                 SELECT DISTINCT amenities
                 FROM AMENITIES

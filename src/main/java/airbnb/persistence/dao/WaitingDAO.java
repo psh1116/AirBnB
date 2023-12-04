@@ -41,6 +41,7 @@ public class WaitingDAO {
         }
     }
 
+    // 승인 대기 큐에 추가
     public void insert(int houseId) {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             session.insert("mapper.WaitingMapper.insert", houseId);

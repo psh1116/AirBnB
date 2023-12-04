@@ -5,7 +5,6 @@ import airbnb.persistence.dto.*;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class HouseDAO {
@@ -106,7 +105,7 @@ public class HouseDAO {
     }
 
     // 숙소 등록 -> Waiting 에 넣어줘야함
-    public void insertHouse(HouseDTO insertHouseDTO) {
+    public synchronized void insertHouse(HouseDTO insertHouseDTO) {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             HouseDTO houseDTO = session.selectOne("mapper.HouseMapper.getHouseByHouseName", insertHouseDTO.getHouseName());
             if (houseDTO == null) {

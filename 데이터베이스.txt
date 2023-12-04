@@ -1,0 +1,100 @@
+create TABLE USER(
+    user_id         INT             NOT NULL    AUTO_INCREMENT      PRIMARY KEY,
+    user_name       VARCHAR(32)     NOT NULL,
+    user_phone      VARCHAR(11)     NOT NULL,
+    user_birthday   date            NOT NULL,
+    role            ENUM('GUEST', 'HOST', 'ADMIN')            NOT NULL,
+    login_id        VARCHAR(32)     NOT NULL,
+    login_pwd       VARCHAR(32)     NOT NULL
+);
+
+CREATE TABLE HOUSE(
+    house_id        INT             NOT NULL    AUTO_INCREMENT      PRIMARY KEY,
+    host_id         INT             NOT NULL,
+    house_name      VARCHAR(52)     NOT NULL,
+    house_address   VARCHAR(52)     NOT NULL,
+    house_introduce VARCHAR(1024)    NOT NULL,
+    bedroom         INT             NOT NULL,
+    bathroom        INT             NOT NULL,
+
+    FOREIGN KEY(host_id)    REFERENCES USER(host_id)
+);
+
+CREATE TABLE WAITING(
+    waiting_id      INT             NOT NULL    AUTO_INCREMENT      PRIMARY KEY,
+    house_id        INT             NOT NULL,
+
+    FOREIGN KEY(house_id)   REFERENCES HOUSE(house_id)
+);
+
+CREATE TABLE APPROVED(
+    approve_id      INT             NOT NULL    AUTO_INCREMENT      PRIMARY KEY,
+    isApproved      BOOLEAN         NOT NULL,
+
+);
+
+CREATE TABLE AMENITIES(
+    amenities_id    INT             NOT NULL    AUTO_INCREMENT      PRIMARY KEY,
+    house_id        INT             NOT NULL,
+    amenities       VARCHAR(32)     NOT NULL,
+    type_id         INT             NOT NULL,
+    count           INT             NOT NULL    DEFAULT 0,
+
+    FOREIGN KEY(house_id)   REFERENCES HOUSE(house_id)
+    FOREIGN KEY(type_id)    REFERENCES AMENITIES_TYPE(type_id)
+);
+
+CREATE TABLE AMENITIES_TYPE(
+    type_id         INT             NOT NULL    AUTO_INCREMENT      PRIMARY KEY,
+    type            ENUM('BASIC', 'SAFETY', 'ACCESSIBILITY') NOT NULL
+    );
+
+CREATE TABLE RESERVATION(
+    reservation_id      INT             NOT NULL    AUTO_INCREMENT      PRIMARY KEY,
+    user_id             INT             NOT NULL,
+    house_id            INT             NOT NULL,
+    reservation_status  enum('WAIT', 'BEFORE_STAY', 'STAY', 'AFTER_STAY')      NOT NULL,
+    guests_num          INT             NOT NULL,   # 손님 수
+    reservation_date    date            NOT NULL,
+    check_in            date            NOT NULL,
+    check_out           date            NOT NULL,
+    cost                INT             NOT NULL,
+
+    FOREIGN KEY (user_id)   REFERENCES USER(user_id),
+    FOREIGN KEY (house_id)  REFERENCES HOUSE(house_id)
+);
+
+CREATE TABLE FEE_POLICY(
+    fee_id              INT             NOT NULL    AUTO_INCREMENT      PRIMARY KEY ,
+    house_id            INT             NOT NULL,
+    weekday             INT             NOT NULL,
+    weekend             INT             NOT NULL,
+
+    FOREIGN KEY (house_id) REFERENCES HOUSE(house_id)
+);
+
+
+CREATE TABLE DISCOUNT_POLICY(
+    discount_id         INT             NOT NULL    AUTO_INCREMENT      PRIMARY KEY ,
+    house_id            INT             NOT NULL ,
+    discount_day        INT             NOT NULL ,
+    discount_amount     INT             NOT NULL ,
+    discount_rate       INT             NOT NULL ,
+    discount_start      DATE            NOT NULL ,
+    discount_end        DATE            NOT NULL ,
+
+    FOREIGN KEY (discount_opt)  REFERENCES DISCOUNT_OPT(discount_opt),
+    FOREIGN KEY (house_id)      REFERENCES HOUSE(house_id)
+);
+
+CREATE TABLE REPLY(
+    reply_id            INT             NOT NULL    AUTO_INCREMENT      PRIMARY KEY ,
+    reservation_id      INT             NOT NULL ,
+    login_id            VARCHAR(32)     NOT NULL ,
+    user_name           VARCHAR(32)     NOT NULL ,
+    reply               VARCHAR(1024)   NOT NULL ,
+
+    FOREIGN KEY (reservation_id) REFERENCES RESERVATION(reservation_id),
+    FOREIGN KEY (login_id)  REFERENCES USER(login_id)
+    FOREIGN KEY (user_name) REFERENCES USER(user_name)
+);

@@ -9,7 +9,6 @@ import airbnb.persistence.dto.ReservationDTO;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.ibatis.session.SqlSessionFactory;
 
-import java.sql.Date;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -87,16 +86,15 @@ public class ReservationDAO {
     }
 
     // 숙박 가능한지 불가능한지 확인하고 reservation 테이블에 넣어야 함
-    public void insert(ReservationDTO insertReservationDTO) {
+
+    public synchronized void insert(ReservationDTO insertReservationDTO) {
         try (SqlSession session = sqlSessionFactory.openSession()) {
-            insertReservationDTO.setCheckIn(Date.valueOf(insertReservationDTO.getCheckIn().toLocalDate().plusDays(1)));
             int capacity = session.selectOne("mapper.HouseMapper.getCapacity", insertReservationDTO.getHouseId());
             if (capacity < insertReservationDTO.getGuestNum()) {
                 throw new InvalidReservationException("Capacity exceeded !");
             }
             Boolean check = session.selectOne("mapper.ReservationMapper.checkAvailability", insertReservationDTO);
             if (check || check == null) {
-                insertReservationDTO.setCheckIn(Date.valueOf(insertReservationDTO.getCheckIn().toLocalDate().minusDays(1)));
                 session.insert("mapper.ReservationMapper.insert", insertReservationDTO);
                 session.commit();
             } else {

@@ -173,10 +173,10 @@
                                          WHERE reservation.house_id = #{houseId}
                                            AND (reservation_status IN ('WAIT', 'BEFORE_STAY', 'STAY'))
                                            AND (
-                                                 (reservation.check_out BETWEEN #{checkIn} AND #{checkOut})
-                                                 OR (reservation.check_in BETWEEN #{checkIn} AND #{checkOut})
+                                                 (#{checkOut} > reservation.check_out and reservation.check_out >= #{checkIn})
+                                                 OR (#{checkOut} >= reservation.check_in and reservation.check_in > #{checkIn})
                                                  OR
-                                                 (reservation.check_in > #{checkIn} AND reservation.check_out > #{checkOut})
+                                                 (#{checkIn} > reservation.check_in  AND reservation.check_out > #{checkOut})
                                              )), 0
                                     ) + #{guestNum}
         FROM house

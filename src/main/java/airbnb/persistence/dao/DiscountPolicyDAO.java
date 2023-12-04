@@ -16,7 +16,7 @@ public class DiscountPolicyDAO {
         this.sqlSessionFactory = sqlSessionFactory;
     }
 
-    public void insert(DiscountPolicyDTO discountPolicyDTO) throws Exception {
+    public synchronized void insert(DiscountPolicyDTO discountPolicyDTO) throws Exception {
         try (SqlSession session = sqlSessionFactory.openSession()) {
             DiscountPolicyDTO check = session.selectOne("mapper.DiscountPolicyMapper.getDiscountByHouseId", discountPolicyDTO.getHouseId());
 

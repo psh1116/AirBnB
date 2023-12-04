@@ -46,7 +46,7 @@ public class SaleCalculator {
 
             return CalculateTotalCost(dateList, discountDays, withoutCostObject, withCostObject) * guestNum;
         } else {
-            int totalPrice = calculateTotalPrice(dateList, weekdayPrice, weekendPrice);
+            int totalPrice = calculateTotalPrice(dateList, weekdayPrice, weekendPrice) * guestNum;
             return totalPrice;
         }
 
