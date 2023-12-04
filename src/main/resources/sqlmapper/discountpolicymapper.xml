@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.DiscountPolicyMapper">
+    <resultMap id="result" type="airbnb.persistence.dto.DiscountPolicyDTO">
+        <result property="discountId" column="discount_id"/>
+        <result property="houseId" column="house_id"/>
+        <result property="discountDay" column="discount_day"/>
+        <result property="discount_amount" column="discount_amount"/>
+        <result property="discount_rate" column="discount_rate"/>
+        <result property="discountStart" column="discount_start"/>
+        <result property="discountEnd" column="discount_end"/>
+    </resultMap>
+
+    <select id="getDiscountByHouseId" parameterType="int" resultMap="result">
+        SELECT *
+        FROM DISCOUNT_POLICY
+        WHERE house_id = #{houseId}
+    </select>
+
+    <insert id="insert">
+        INSERT INTO DISCOUNT_POLICY(house_id, discount_day, discount_amount, discount_rate, discount_start, discount_end)
+        VALUES (#{houseId}, #{discountDay}, #{discount_amount}, #{discount_rate}, #{discountStart}, #{discountEnd})
+    </insert>
+
+    <update id="update">
+        UPDATE DISCOUNT_POLICY
+        SET discount_day    = #{discountDay},
+            discount_amount = #{discount_amount},
+            discount_rate   = #{discount_rate},
+            discount_start = #{discountStart},
+            discount_end = #{discountEnd}
+        WHERE house_id = #{houseId}
+    </update>
+
+    <select id="getDiscountPolicyByHouseId" parameterType="int" resultMap="result">
+        SELECT *
+        FROM DISCOUNT_POLICY
+        WHERE house_id = #{houseId}
+    </select>
+</mapper>

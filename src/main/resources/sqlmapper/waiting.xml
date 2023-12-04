@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.WaitingMapper">
+    <resultMap id="result" type="airbnb.persistence.dto.WaitingDTO">
+        <result property="waitingId" column="waiting_id"/>
+        <result property="houseId" column="house_id" />
+    </resultMap>
+
+    <delete id="deleteWaitingByHouseId" parameterType="int">
+        DELETE FROM WAITING
+        WHERE house_id = #{houseId}
+    </delete>
+
+<!--    승인 대기 조회-->
+    <select id="getAll" resultMap="result">
+        SELECT *
+        FROM WAITING
+    </select>
+
+    <insert id="insert">
+        INSERT INTO WAITING(house_id)
+        VALUES (#{houseId})
+    </insert>
+<!--    숙소 대기 큐 삽입-->
+    <insert id="insertWaiting">
+        INSERT INTO WAITING(house_id)
+        VALUES (#{houseId})
+    </insert>
+
+<!--    숙소 대기 큐 삭제-->
+    <delete id="deleteWaiting" parameterType="int">
+        DELETE FROM WAITING
+        WHERE house_id = #{houseId}
+    </delete>
+</mapper>

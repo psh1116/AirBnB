@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.ReservationMapper">
+    <resultMap id="result" type="airbnb.persistence.dto.ReservationDTO">
+        <result property="reservationId" column="reservation_id"/>
+        <result property="houseId" column="house_id"/>
+        <result property="userId" column="user_id"/>
+        <result property="reservationStatus" column="reservation_status"/>
+        <result property="guestNum" column="guest_num"/>
+        <result property="reservationDate" column="reservation_date"/>
+        <result property="checkIn" column="check_in"/>
+        <result property="checkOut" column="check_out"/>
+        <result property="cost" column="cost"/>
+    </resultMap>
+
+    <insert id="insert">
+        INSERT INTO RESERVATION(house_id, user_id, guest_num, check_in, check_out, cost)
+        VALUES (#{houseId}, #{userId}, #{guestNum}, #{checkIn}, #{checkOut}, #{cost})
+    </insert>
+
+    <resultMap id="completedStayDTO" type="airbnb.persistence.dto.CompletedStayDTO">
+        <result property="reservationId" column="reservation_id"/>
+        <result property="houseName" column="house_name"/>
+        <result property="checkIn" column="check_in"/>
+        <result property="checkOut" column="check_out"/>
+        <result property="reservationStatus" column="reservation_status"/>
+        <result property="cost" column="cost"/>
+    </resultMap>
+
+    <select id="getCompletedStayReservationByUserId" resultMap="completedStayDTO" parameterType="int">
+        SELECT reservation_id, house_name, check_in, check_out, reservation_status, cost
+        FROM HOUSE,
+             RESERVATION
+        WHERE RESERVATION.house_id = HOUSE.house_id
+          AND RESERVATION.user_id = #{userId}
+          AND RESERVATION.reservation_status = 'AFTER_STAY'
+    </select>
+
+    <select id="getBeforeStayReservationByUserId" resultMap="completedStayDTO" parameterType="int">
+        SELECT reservation_id, house_name, check_in, check_out, reservation_status, cost
+        FROM HOUSE,
+             RESERVATION
+        WHERE RESERVATION.house_id = HOUSE.house_id
+          AND RESERVATION.user_id = #{userId}
+          AND (RESERVATION.reservation_status IN ('REFUSE', 'CANCEL', 'BEFORE_STAY', 'WAIT'))
+    </select>
+
+
+    <select id="getAll" resultMap="result">
+        SELECT *
+        FROM RESERVATION
+    </select>
+
+
+    <update id="updateReservationStatus">
+        UPDATE RESERVATION
+        SET reservation_status = #{reservationStatus}
+        WHERE reservation_id = #{reservationId}
+    </update>
+
+    <update id="updateCost">
+        UPDATE RESERVATION
+        SET cost = #{cost}
+        WHERE reservation_id = #{reservationId}
+    </update>
+
+    <!-- 유저 id 예약 현황 조회 -->
+    <select id="getReservationByUserId" resultMap="result" parameterType="int">
+        SELECT *
+        FROM RESERVATION
+        WHERE user_id = #{userId}
+    </select>
+
+    <select id="getReservationByHouseId" resultMap="result" parameterType="int">
+        SELECT *
+        FROM RESERVATION
+        WHERE house_id = #{houseId}
+          AND reservation_status NOT IN ('REFUSE', 'CANCEL')
+    </select>
+
+    <delete id="deleteByReservationId" parameterType="int">
+        DELETE
+        FROM RESERVATION
+        WHERE reservation_id = #{reservationId}
+    </delete>
+
+    <delete id="deleteByReservationIdByHost">
+        DELETE
+        FROM RESERVATION
+        WHERE reservation_id = #{reservationId}
+    </delete>
+
+    <select id="hasReview" resultType="java.lang.Boolean">
+        SELECT EXISTS(SELECT 1
+                      FROM REVIEW
+                      WHERE reservation_id = #{reservationId}) AS hasReview
+    </select>
+
+    <select id="getHouseIdByReservationId" parameterType="int" resultType="int">
+        SELECT house_id
+        FROM RESERVATION
+        WHERE reservation_id = #{reservationId}
+    </select>
+
+    <resultMap id="temp" type="airbnb.persistence.dto.HouseAndReservationDTO">
+        <result property="houseName" column="house_name"/>
+        <result property="reservationId" column="reservation_id"/>
+        <result property="guestNum" column="guest_num"/>
+        <result property="checkIn" column="check_in"/>
+        <result property="checkOut" column="check_out"/>
+        <result property="cost" column="cost"/>
+        <result property="userId" column="user_id"/>
+        <result property="loginId" column="login_id"/>
+        <result property="userName" column="user_name"/>
+        <result property="userPhone" column="user_phone"/>
+
+    </resultMap>
+    <select id="getWaitingReservationStatusWAITINGByHostId" parameterType="int" resultMap="temp">
+        SELECT HOUSE.house_name,
+               RESERVATION.reservation_id,
+               RESERVATION.guest_num,
+               RESERVATION.check_in,
+               RESERVATION.check_out,
+               RESERVATION.cost,
+               USER.user_id,
+               USER.login_id,
+               USER.user_name,
+               USER.user_phone
+        FROM RESERVATION
+                 LEFT JOIN
+             HOUSE ON RESERVATION.house_id = HOUSE.house_id
+                 JOIN
+             USER ON RESERVATION.user_id = USER.user_id
+        WHERE reservation_status = 'WAIT'
+          AND HOUSE.host_id = #{hostId}
+          AND HOUSE.house_id IN (SELECT RESERVATION.house_id
+                                 FROM RESERVATION
+                                 WHERE RESERVATION.reservation_status = 'WAIT');
+
+
+    </select>
+
+
+    <select id="getReservationWithStatusAfterStayByHouseId" parameterType="int" resultMap="result">
+        SELECT *
+        FROM RESERVATION
+        WHERE house_id = #{houseId}
+          AND reservation_status = 'AFTER_STAY'
+    </select>
+
+    <select id="getReservationByHouseIdWithNotRefuse" parameterType="int" resultMap="result">
+        SELECT *
+        FROM RESERVATION
+        WHERE house_id = #{houseId}
+          AND reservation_status NOT IN ('REFUSE')
+    </select>
+
+    <select id="getReservationByHouseIdWithAfterStay" parameterType="int" resultMap="result">
+        SELECT *
+        FROM RESERVATION
+        WHERE house_id = #{houseId}
+          AND reservation_status = 'AFTER_STAY'
+    </select>
+
+    <!--    예약 가능한지-->
+    <select id="checkAvailability" resultType="boolean">
+        SELECT house.bedroom >= COALESCE(
+                                        (SELECT SUM(reservation.guest_num)
+                                         FROM reservation
+                                         WHERE reservation.house_id = #{houseId}
+                                           AND (reservation_status IN ('WAIT', 'BEFORE_STAY', 'STAY'))
+                                           AND (
+                                                 (reservation.check_out BETWEEN #{checkIn} AND #{checkOut})
+                                                 OR (reservation.check_in BETWEEN #{checkIn} AND #{checkOut})
+                                                 OR
+                                                 (reservation.check_in > #{checkIn} AND reservation.check_out > #{checkOut})
+                                             )), 0
+                                    ) + #{guestNum}
+        FROM house
+        WHERE house.house_id = #{houseId}
+    </select>
+</mapper>

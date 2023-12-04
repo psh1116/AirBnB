@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.ReplyMapper">
+    <resultMap id="result" type="airbnb.persistence.dto.ReplyDTO">
+        <result property="reservationId" column="user_id"/>
+        <result property="replyId" column="reply_id"/>
+        <result property="reservationId" column="reservation_id"/>
+        <result property="loginId" column="login_id"/>
+        <result property="userName" column="user_name"/>
+        <result property="reply" column="reply"/>
+    </resultMap>
+
+    <select id="getAll" resultMap="result">
+        SELECT *
+        FROM REPLY
+    </select>
+
+    <select id="getReplyWithReservationId" parameterType="int" resultMap="result">
+        SELECT *
+        FROM REPLY
+        WHERE reservation_id = #{reservationId}
+        LIMIT 1
+    </select>
+
+    <insert id="insert">
+        INSERT INTO REPLY(reservation_id, login_id, user_name, reply)
+        VALUES (#{reservationId}, #{loginId}, #{userName}, #{reply})
+    </insert>
+</mapper>

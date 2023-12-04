@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.HouseMapper">
+    <resultMap id="result" type="airbnb.persistence.dto.HouseDTO">
+        <result property="houseId" column="house_id"/>
+        <result property="hostId" column="host_id"/>
+        <result property="houseName" column="house_name"/>
+        <result property="houseAddress" column="house_address"/>
+        <result property="houseIntroduce" column="house_introduce"/>
+        <result property="bedroom" column="bedroom"/>
+        <result property="bathroom" column="bathroom"/>
+        <result property="houseType" column="house_type"/>
+    </resultMap>
+
+    <resultMap id="HouseDTOWithHostInfoResultMap" type="airbnb.persistence.dto.HouseAndHostDTO">
+        <result property="houseId" column="house_id"/>
+        <result property="hostId" column="host_id"/>
+        <result property="houseName" column="house_name"/>
+        <result property="houseAddress" column="house_address"/>
+        <result property="houseIntroduce" column="house_introduce"/>
+        <result property="houseType" column="house_type"/>
+        <result property="bedroom" column="bedroom"/>
+        <result property="bathroom" column="bathroom"/>
+        <result property="loginId" column="login_id"/>
+        <result property="hostName" column="user_name"/>
+    </resultMap>
+    
+    <select id="getCapacity" parameterType="int" resultType="int">
+        SELECT bedroom
+        FROM HOUSE
+        WHERE house_id = #{houseId}
+    </select>
+
+    <select id="getApprovedSetFeePolicy" resultType="airbnb.persistence.dto.HouseAndFeeDTO">
+        SELECT HOUSE.*, FEE_POLICY.weekday, FEE_POLICY.weekend
+        FROM HOUSE,
+             FEE_POLICY
+        WHERE HOUSE.house_id IN (SELECT APPROVED.house_id
+                                 FROM APPROVED
+                                 WHERE isApproved = 1)
+          AND HOUSE.house_id = FEE_POLICY.house_id
+    </select>
+
+    <select id="getApprovedSetFeePolicyASC" resultType="airbnb.persistence.dto.HouseAndFeeDTO">
+        SELECT HOUSE.*, FEE_POLICY.weekday, FEE_POLICY.weekend
+        FROM HOUSE,
+             FEE_POLICY
+        WHERE HOUSE.house_id IN (SELECT APPROVED.house_id
+                                 FROM APPROVED
+                                 WHERE isApproved = 1)
+          AND HOUSE.house_id = FEE_POLICY.house_id
+        ORDER BY weekday;
+    </select>
+    <select id="getApprovedSetFeePolicyDESC" resultType="airbnb.persistence.dto.HouseAndFeeDTO">
+        SELECT HOUSE.*, FEE_POLICY.weekday, FEE_POLICY.weekend
+        FROM HOUSE
+                 JOIN FEE_POLICY ON HOUSE.house_id = FEE_POLICY.house_id
+        WHERE HOUSE.house_id IN (SELECT APPROVED.house_id
+                                 FROM APPROVED
+                                 WHERE isApproved = 1)
+        ORDER BY FEE_POLICY.weekday DESC;
+    </select>
+
+    <select id="getWaitingWithHostAndHouse" resultMap="HouseDTOWithHostInfoResultMap">
+        SELECT HOUSE.*,
+               USER.login_id,
+               USER.user_name
+        FROM USER,
+             HOUSE
+        WHERE USER.user_id = HOUSE.host_id
+          AND house_id IN (SELECT house_id
+                           FROM WAITING)
+    </select>
+
+    <select id="getMaxHouseId" resultType="int">
+        SELECT MAX(house_id)
+        FROM HOUSE
+        LIMIT 1
+    </select>
+
+    <insert id="insertHouse">
+        INSERT INTO HOUSE(house_name, host_id, house_address, house_introduce, bedroom, bathroom)
+        VALUES (#{houseName}, #{hostId}, #{houseAddress}, #{houseIntroduce}, #{bedroom}, #{bathroom})
+    </insert>
+
+    <select id="getHouseByHostId" resultMap="result" parameterType="int">
+        SELECT *
+        FROM HOUSE
+        WHERE host_id = #{hostId}
+    </select>
+
+    <select id="getHouseByHouseName" resultMap="result" parameterType="string">
+        SELECT *
+        FROM HOUSE
+        WHERE house_name = #{houseName}
+    </select>
+
+    <select id="getApprovedHouseSetFeePolicyByHostId" parameterType="int" resultMap="result">
+        SELECT *
+        FROM HOUSE
+        WHERE host_id = #{hostId}
+          AND house_id IN (SELECT house_id
+                           FROM APPROVED)
+    </select>
+
+    <select id="getWaitingHouse" resultMap="result">
+        SELECT *
+        FROM HOUSE
+        WHERE house_id IN (SELECT house_id
+                           FROM WAITING)
+    </select>
+
+    <!--    승인됐지만 요금정책 설정안한거 && host가 요금정책 정할거라 house_id 받아서 리턴-->
+    <select id="getApprovedHouseNotSetFeePolicyByHostId" parameterType="int" resultMap="result">
+        SELECT HOUSE.house_id,
+               HOUSE.host_id,
+               HOUSE.house_name,
+               HOUSE.house_address,
+               HOUSE.house_introduce,
+               HOUSE.bedroom,
+               HOUSE.bathroom,
+               HOUSE.house_type
+        FROM HOUSE
+                 JOIN APPROVED A ON HOUSE.house_id = A.house_id
+        WHERE host_id = #{hostId}
+          AND A.isApproved = 1
+          AND A.house_id NOT IN (SELECT house_id FROM FEE_POLICY);
+    </select>
+
+    <!--승인되고 가격 설정된 숙소 목록-->
+    <select id="getApprovedHouseSetFeePolicy" parameterType="int" resultMap="result">
+        SELECT HOUSE.house_id,
+               HOUSE.host_id,
+               HOUSE.house_name,
+               HOUSE.house_address,
+               HOUSE.house_introduce,
+               HOUSE.bedroom,
+               HOUSE.bathroom,
+               HOUSE.house_type
+        FROM HOUSE
+                 JOIN APPROVED A ON HOUSE.house_id = A.house_id
+        WHERE A.isApproved = 1
+          AND A.house_id IN (SELECT house_id FROM FEE_POLICY);
+    </select>
+
+    <select id="getApprovedHouseSetFeePolicyAndDiscountInfoByHostId" parameterType="int"
+            resultType="airbnb.persistence.dto.HouseAndDiscountDTO">
+        SELECT H.house_id,
+               H.host_id,
+               H.house_name,
+               H.house_address,
+               H.house_introduce,
+               H.bedroom,
+               H.bathroom,
+               D.discount_day,
+               D.discount_amount,
+               D.discount_rate,
+               D.discount_start,
+               D.discount_end
+        FROM HOUSE H
+                 JOIN APPROVED A ON H.house_id = A.house_id
+                 LEFT JOIN FEE_POLICY F ON H.house_id = F.house_id
+                 LEFT JOIN DISCOUNT_POLICY D ON H.house_id = D.house_id
+        WHERE H.host_id = #{hostId}
+          AND F.house_id = H.house_id
+          AND A.isApproved = 1
+    </select>
+
+    <select id="getFilteredHouses" resultType="airbnb.persistence.dto.HouseAndFeeDTO">
+        SELECT DISTINCT HOUSE.*, FEE_POLICY.weekday, FEE_POLICY.weekend
+        FROM HOUSE
+        JOIN FEE_POLICY ON HOUSE.house_id = FEE_POLICY.house_id
+        <where>
+            <if test="houseName != null">
+                AND HOUSE.house_name LIKE CONCAT('%', #{houseName}, '%')
+            </if>
+            <if test="guestNum != 0">
+                AND HOUSE.bedroom >= #{guestNum}
+            </if>
+            <if test="houseType != null">
+                AND house_type = #{houseType}
+            </if>
+            <if test="checkIn != null and checkOut != null">
+                AND #{guestNum} &lt;= house.bedroom - COALESCE((SELECT SUM(reservation.guest_num)
+                FROM RESERVATION
+                WHERE HOUSE.house_id = RESERVATION.house_id
+                AND (reservation_status = 'BEFORE_STAY' OR reservation_status = 'STAY' OR reservation_status = 'WAIT')
+                AND ((reservation.check_out BETWEEN #{checkIn} AND #{checkOut})
+                OR (reservation.check_in BETWEEN #{checkIn} AND #{checkOut})
+                OR (reservation.check_in &lt; #{checkIn} AND #{checkOut} &lt; reservation.check_out))), 0)
+            </if>
+            <if test="amenities != null and !amenities.isEmpty()">
+                AND HOUSE.house_id IN (
+                SELECT house_id
+                FROM AMENITIES
+                WHERE amenities IN
+                <foreach item="amenity" collection="amenities" open="(" separator="," close=")">
+                    #{amenity}
+                </foreach>
+                GROUP BY house_id
+                HAVING COUNT(DISTINCT amenities) = (
+                SELECT COUNT(*)
+                FROM (
+                SELECT DISTINCT amenities
+                FROM AMENITIES
+                JOIN HOUSE ON AMENITIES.house_id = HOUSE.house_id
+                WHERE amenities IN
+                <foreach item="amenity" collection="amenities" open="(" separator="," close=")">
+                    #{amenity}
+                </foreach>
+                ) AS temp
+                ))
+            </if>
+        </where>
+    </select>
+</mapper>

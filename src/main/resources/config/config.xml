@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="JDBC"/>
+            <!--  connecting to Local MySql -->
+            <dataSource type="POOLED">
+                <property name="driver" value="com.mysql.cj.jdbc.Driver"/>
+                <property name="url" value="jdbc:mysql://localhost:3306/AirBnB"/>
+                <property name="username" value="root"/>
+                <property name="password" value="5514"/>
+            </dataSource>
+        </environment>
+    </environments>
+    <mappers>
+        <mapper resource="sqlmapper/user.xml"/>
+        <mapper resource="sqlmapper/login.xml"/>
+        <mapper resource="sqlmapper/reservation.xml"/>
+        <mapper resource="sqlmapper/review.xml"/>
+        <mapper resource="sqlmapper/house.xml"/>
+        <mapper resource="sqlmapper/amenities.xml"/>
+        <mapper resource="sqlmapper/feepolicy.xml"/>
+        <mapper resource="sqlmapper/waiting.xml"/>
+        <mapper resource="sqlmapper/approved.xml"/>
+        <mapper resource="sqlmapper/discountpolicymapper.xml"/>
+        <mapper resource="sqlmapper/reply.xml"/>
+    </mappers>
+</configuration>

@@ -1,0 +1,6 @@
+<configuration>
+    <!-- 다른 설정들 -->
+    <settings>
+        <setting name="logImpl" value="LOG4J"/> <!-- 로그 레벨 설정 -->
+    </settings>
+</configuration>

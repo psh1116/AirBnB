@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="mapper.AmenitiesMapper">
+    <resultMap id="result" type="airbnb.persistence.dto.AmenitiesDTO">
+        <result property="amenitiesId" column="amenities_id"/>
+        <result property="houseId" column="house_id"/>
+        <result property="amenities" column="amenities"/>
+        <result property="typeId" column="type_id"/>
+        <result property="count" column="count"/>
+    </resultMap>
+
+    <select id="getOption" resultMap="result">
+        SELECT *
+        FROM AMENITIES
+        WHERE house_id = 1
+    </select>
+    <select id="getAll" resultMap="result">
+        SELECT *
+        FROM AMENITIES
+    </select>
+
+    <select id="getBasicAmenities" resultMap="result">
+        SELECT *
+        FROM AMENITIES
+        WHERE house_id = 1
+          AND type_id = 1
+    </select>
+
+    <select id="getSafetyAmenities" resultMap="result">
+        SELECT *
+        FROM AMENITIES
+        WHERE house_id = 1
+          AND type_id = 2
+    </select>
+
+    <select id="getAccessAmenities" resultMap="result">
+        SELECT *
+        FROM AMENITIES
+        WHERE house_id = 1
+          AND type_id = 3
+    </select>
+    <select id="getAmenitiesByHouseId" resultMap="result" parameterType="int">
+        SELECT *
+        FROM AMENITIES
+        WHERE house_id = #{houseId}
+    </select>
+
+    <!--    검색어 기준 상위 10개-->
+    <select id="getAmenitiesByMostCount" resultMap="result">
+        SELECT DISTINCT amenities, COUNT(*) as count
+        FROM Amenities
+        GROUP BY amenities
+        ORDER BY count DESC
+        LIMIT 10
+    </select>
+
+    <insert id="insertAmenities">
+        INSERT INTO AMENITIES(house_id, amenities, type_id)
+        VALUES (#{houseId}, #{amenities}, #{typeId})
+    </insert>
+
+    <update id="incrementAmenitiesCount" parameterType="java.util.List">
+        UPDATE Amenities
+        SET count = count + 1
+        WHERE amenities IN
+        <foreach collection="list" item="amenity" open="(" separator="," close=")">
+            #{amenity}
+        </foreach>
+    </update>
+</mapper>
